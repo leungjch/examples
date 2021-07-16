@@ -1,5 +1,7 @@
 import torch
 from PIL import Image
+import base64
+import io
 
 
 def load_image(filename, size=None, scale=None):
@@ -7,7 +9,8 @@ def load_image(filename, size=None, scale=None):
     if size is not None:
         img = img.resize((size, size), Image.ANTIALIAS)
     elif scale is not None:
-        img = img.resize((int(img.size[0] / scale), int(img.size[1] / scale)), Image.ANTIALIAS)
+        img = img.resize((int(img.size[0] / scale), int(img.size[1] / scale)),
+                         Image.ANTIALIAS)
     return img
 
 
@@ -16,6 +19,20 @@ def save_image(filename, data):
     img = img.transpose(1, 2, 0).astype("uint8")
     img = Image.fromarray(img)
     img.save(filename)
+
+
+def save_image_base64(data):
+    img = data.clone().clamp(0, 255).numpy()
+    img = img.transpose(1, 2, 0).astype("uint8")
+    img = Image.fromarray(img)
+
+    # Get base64
+    buffered = io.BytesIO()
+    img.save(buffered, format="PNG")
+    buffered.seek(0)
+    img_byte = buffered.getvalue()
+    img_str = "data:image/png;base64," + base64.b64encode(img_byte).decode()
+    return img_str
 
 
 def gram_matrix(y):
